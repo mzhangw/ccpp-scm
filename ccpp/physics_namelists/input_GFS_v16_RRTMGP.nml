@@ -71,10 +71,11 @@
        do_RRTMGP      = .true.
        active_gases   = 'h2o_co2_o3_n2o_ch4_o2'
        ngases         = 6
-       lw_file_gas        = 'rrtmgp-data-lw-g128-210809.nc'
-       lw_file_clouds     = 'rrtmgp-cloud-optics-coeffs-lw.nc'
-       sw_file_gas        = 'rrtmgp-data-sw-g112-210809.nc'
-       sw_file_clouds     = 'rrtmgp-cloud-optics-coeffs-sw.nc'
+       rrtmgp_root    = '../../ccpp/physics/physics/rte-rrtmgp/'
+       lw_file_gas    = 'rrtmgp/data/rrtmgp-data-lw-g128-210809.nc'
+       lw_file_clouds = 'extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-lw.nc'
+       sw_file_gas    = 'rrtmgp/data/rrtmgp-data-sw-g112-210809.nc'
+       sw_file_clouds = 'extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-sw.nc'
        rrtmgp_nGptsSW     = 112
        rrtmgp_nGptsLW     = 128
        rrtmgp_nBandsLW    = 16
@@ -82,6 +83,7 @@
        doGP_cldoptics_LUT = .true.
        doGP_lwscat        = .true.
        use_LW_jacobian    = .false.
+
 /
 
 &gfdl_cloud_microphysics_nml
@@ -146,6 +148,6 @@
        knob_ugwp_dokdis  = 1
        knob_ugwp_ndx4lh  = 1
        knob_ugwp_version = 0
-       launch_level      = 27
+       launch_level      = 45
 /
 
