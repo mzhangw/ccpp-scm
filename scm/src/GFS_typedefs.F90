@@ -668,6 +668,7 @@ module GFS_typedefs
     logical              :: cplwav2atm      !< default no wav->atm coupling
     logical              :: cplaqm          !< default no cplaqm collection
     logical              :: cplchm          !< default no cplchm collection
+    logical              :: cpllnd          !< default no cpllnd collection
     logical              :: rrfs_smoke      !< default no rrfs_smoke collection
     integer              :: dust_smoke_rrtmg_band_number !< band number to affect in rrtmg_pre from smoke and dust
     logical              :: use_cice_alb    !< default .false. - i.e. don't use albedo imported from the ice model
@@ -2501,7 +2502,7 @@ module GFS_typedefs
        Coupling%tsfc_radtime       = clear_val
     endif
 
-    if (Model%cplflx .or. Model%do_sppt .or. Model%cplchm .or. Model%ca_global) then
+    if (Model%cplflx .or. Model%do_sppt .or. Model%cplchm .or. Model%ca_global .or. Model%cpllnd) then
       allocate (Coupling%rain_cpl (IM))
       allocate (Coupling%snow_cpl (IM))
       Coupling%rain_cpl = clear_val
@@ -2517,7 +2518,7 @@ module GFS_typedefs
       Coupling%v10mi_cpl = clear_val
     endif
 
-    if (Model%cplflx .or. Model%cplchm) then
+    if (Model%cplflx .or. Model%cplchm .or. Model%cpllnd) then
       !--- instantaneous quantities
       allocate (Coupling%tsfci_cpl (IM))
       Coupling%tsfci_cpl = clear_val
@@ -2530,7 +2531,7 @@ module GFS_typedefs
 !     Coupling%zorlwav_cpl  = clear_val
 !   endif
 
-    if (Model%cplflx) then
+    if (Model%cplflx.or. Model%cpllnd) then
       !--- incoming quantities
       allocate (Coupling%slimskin_cpl        (IM))
       allocate (Coupling%dusfcin_cpl         (IM))
@@ -2905,6 +2906,7 @@ module GFS_typedefs
     logical              :: cplwav2atm     = .false.         !< default no cplwav2atm coupling
     logical              :: cplaqm         = .false.         !< default no cplaqm collection
     logical              :: cplchm         = .false.         !< default no cplchm collection
+    logical              :: cpllnd         = .false.         !< default no cpllnd collection
     logical              :: rrfs_smoke     = .false.         !< default no rrfs_smoke collection
     integer              :: dust_smoke_rrtmg_band_number = 10!< band number to affect in rrtmg_pre from smoke and dust
     logical              :: use_cice_alb   = .false.         !< default no cice albedo
@@ -3432,7 +3434,7 @@ module GFS_typedefs
                                thermodyn_id, sfcpress_id,                                   &
                           !--- coupling parameters
                                cplflx, cplice, cplocn2atm, cplwav, cplwav2atm, cplaqm,      &
-                               cplchm, cpl_imp_mrg, cpl_imp_dbg, rrfs_smoke,                &
+                               cplchm, cpllnd, cpl_imp_mrg, cpl_imp_dbg, rrfs_smoke,                &
                                use_cice_alb, dust_smoke_rrtmg_band_number,                  &
 #ifdef IDEA_PHYS
                                lsidea, weimer_model, f107_kp_size, f107_kp_interval,        &
@@ -3770,6 +3772,7 @@ module GFS_typedefs
     Model%cplwav2atm       = cplwav2atm
     Model%cplaqm           = cplaqm
     Model%cplchm           = cplchm .or. cplaqm
+    Model%cpllnd           = cpllnd
     Model%use_cice_alb     = use_cice_alb
     Model%cpl_imp_mrg      = cpl_imp_mrg
     Model%cpl_imp_dbg      = cpl_imp_dbg
@@ -5697,6 +5700,7 @@ module GFS_typedefs
       print *, ' cplwav2atm        : ', Model%cplwav2atm
       print *, ' cplaqm            : ', Model%cplaqm
       print *, ' cplchm            : ', Model%cplchm
+      print *, ' cpllnd            : ', Model%cpllnd
       print *, ' rrfs_smoke        : ', Model%rrfs_smoke
       print *, ' use_cice_alb      : ', Model%use_cice_alb
       print *, ' cpl_imp_mrg       : ', Model%cpl_imp_mrg
