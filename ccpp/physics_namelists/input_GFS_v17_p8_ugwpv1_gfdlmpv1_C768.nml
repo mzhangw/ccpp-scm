@@ -7,12 +7,11 @@
   fhcyc        = 24
   use_ufo      = .true.
   pre_rad      = .false.
-  imp_physics  = 8
+  imp_physics  = 11
   iovr         = 3
   ltaerosol    = .false.
   lradar       = .true.
   ttendlim     = -999
-  dt_inner     = 225.0
   sedi_semi    = .true.
   decfl        = 10
   oz_phys      = .false.
@@ -67,7 +66,7 @@
   imfshalcnv   = 2
   imfdeepcnv   = 2
   ras          = .false.
-  cdmbgwd      = 10.0,3.5,1.0,1.0
+  cdmbgwd      = 2.5,7.5,1.0,1.0
   prslrd0      = 0.
   ivegsrc      = 1
   isot         = 1
@@ -91,7 +90,7 @@
   nst_anl      = .true.
   psautco      = 0.0008,0.0005
   prautco      = 0.00015,0.00015
-  lgfdlmprad   = .false.
+  lgfdlmprad   = .true.
   effr_in      = .true.
   ldiag_ugwp   = .false.
   fscav_aero   = "'*:0.0'"
@@ -153,9 +152,59 @@
   knob_ugwp_lzmin    = 0.75e3
   knob_ugwp_lzstar   = 2.0e3
   knob_ugwp_taumin   = 0.25e-3
-  knob_ugwp_tauamp   = 1.5e-3
+  knob_ugwp_tauamp   = 0.5e-3
   knob_ugwp_lhmet    = 200.0e3
   knob_ugwp_orosolv  = 'pss-1986'
+/
+
+&gfdl_cloud_microphysics_nml
+    c_cracw = 0.8
+    c_paut = 0.5
+    c_pgacs = 0.01
+    c_psaci = 0.05
+    ccn_l = 300.0
+    ccn_o = 100.0
+    const_vg = .false.
+    const_vi = .false.
+    const_vr = .false.
+    const_vs = .false.
+    de_ice = .false.
+    do_qa = .false.
+    do_sedi_heat = .false.
+    dw_land = 0.16
+    dw_ocean = 0.1
+    fast_sat_adj = .false.
+    fix_negative = .true.
+    icloud_f = 1
+    mono_prof = .true.
+    mp_time = 150.0
+    prog_ccn = .false.
+    qi0_crt = 8e-05
+    qi_lim = 1.0
+    ql_gen = 0.001
+    ql_mlt = 0.001
+    qs0_crt = 0.001
+    rad_graupel = .true.
+    rad_rain = .true.
+    rad_snow = .true.
+    reiflag = 2
+    rh_inc = 0.3
+    rh_inr = 0.3
+    rh_ins = 0.3
+    rthresh = 1e-05
+    sedi_transport = .true.
+    tau_g2v = 900.0
+    tau_i2s = 1000.0
+    tau_l2v = 225.0
+    tau_v2l = 150.0
+    use_ccn = .true.
+    use_ppm = .false.
+    vg_max = 12.0
+    vi_max = 1.0
+    vr_max = 12.0
+    vs_max = 2.0
+    z_slope_ice = .true.
+    z_slope_liq = .true.
 /
 
 &ccpp_suite_sim_nml

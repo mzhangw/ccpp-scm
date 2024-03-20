@@ -28,7 +28,7 @@ export CXX=icpc
 export FC=ifort
 
 echo "Loading cmake"
-module load cmake/3.20.1
+module load cmake/3.28.1
 export CMAKE_C_COMPILER=icc
 export CMAKE_CXX_COMPILER=icpc
 export CMAKE_Fortran_COMPILER=ifort

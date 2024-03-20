@@ -7,12 +7,11 @@
   fhcyc        = 24
   use_ufo      = .true.
   pre_rad      = .false.
-  imp_physics  = 8
+  imp_physics  = 17
   iovr         = 3
   ltaerosol    = .false.
   lradar       = .true.
   ttendlim     = -999
-  dt_inner     = 225.0
   sedi_semi    = .true.
   decfl        = 10
   oz_phys      = .false.
@@ -67,7 +66,7 @@
   imfshalcnv   = 2
   imfdeepcnv   = 2
   ras          = .false.
-  cdmbgwd      = 10.0,3.5,1.0,1.0
+  cdmbgwd      = 2.5,7.5,1.0,1.0
   prslrd0      = 0.
   ivegsrc      = 1
   isot         = 1
@@ -87,6 +86,9 @@
   iopt_tbot    = 2
   iopt_stc     = 3
   debug        = .false.
+  nssl_cccn = 600000000.0
+  nssl_ccn_on = .true.
+  nssl_hail_on = .true.
   nstf_name    = 2,1,0,0,0
   nst_anl      = .true.
   psautco      = 0.0008,0.0005
@@ -153,7 +155,7 @@
   knob_ugwp_lzmin    = 0.75e3
   knob_ugwp_lzstar   = 2.0e3
   knob_ugwp_taumin   = 0.25e-3
-  knob_ugwp_tauamp   = 1.5e-3
+  knob_ugwp_tauamp   = 0.5e-3
   knob_ugwp_lhmet    = 200.0e3
   knob_ugwp_orosolv  = 'pss-1986'
 /
