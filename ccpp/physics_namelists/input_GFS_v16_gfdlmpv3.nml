@@ -82,8 +82,8 @@
     c_paut = 0.5
     c_pgacs = 0.01
     c_psaci = 0.05
-    ccn_l = 300.0
-    ccn_o = 100.0
+    ccn_l = 159.0
+    ccn_o = 66.0
     const_vg = .false.
     const_vi = .false.
     const_vr = .false.
@@ -108,7 +108,7 @@
     rh_inc = 0.3
     rh_inr = 0.3
     rh_ins = 0.3
-    do_cld_adj = .false.
+    do_cld_adj = .true.
     use_rhc_revap = .true.
     f_dq_p = 3.0
     rthresh = 8.0e-06

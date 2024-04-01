@@ -31,6 +31,8 @@ subroutine output_init(scm_state, physics)
   integer :: ncid, hor_dim_id, vert_dim_id, vert_dim_i_id, vert_dim_rad_id, vert_dim_soil_id, dummy_id
   integer :: time_inst_id, time_diag_id, time_swrad_id, time_lwrad_id, time_rad_id
   integer :: year_id, month_id, day_id, hour_id, min_id, time_swrad_var_id, time_lwrad_var_id, time_rad_var_id
+  integer :: int_area, int_dt, int_dtinner
+  integer :: dt_id, dtinner_id, area_id
   character(2) :: idx
   
   real(kind=dp), dimension(scm_state%n_cols) :: missing_value_1D
@@ -101,7 +103,8 @@ subroutine output_init(scm_state, physics)
   call NetCDF_def_var(ncid, 'time_rad', NF90_FLOAT, "model elapsed time for either LW or SW radiation variables", "s", time_rad_var_id, (/ time_rad_id /))
 
   !> - Define the state variables
-  CALL output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id)
+  CALL output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id, physics)
+  !CALL output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id)    !EDG (added physics)
   !> - Define the forcing variables
   CALL output_init_forcing(ncid, time_inst_id, hor_dim_id, vert_dim_id)
   
@@ -117,6 +120,12 @@ subroutine output_init(scm_state, physics)
   call NetCDF_def_var(ncid, 'init_hour',   NF90_INT, "model initialization hour",   "hour",   hour_id)
   call NetCDF_def_var(ncid, 'init_minute', NF90_INT, "model initialization minute", "minute", min_id)
   
+  !EDG - for DTC physTnE, add some useful info
+  call NetCDF_def_var(ncid, 'area',      NF90_INT, "area of the grid cell", "m2", area_id)
+  call NetCDF_def_var(ncid, 'dt',        NF90_INT, "timestep", "s", dt_id)
+  call NetCDF_def_var(ncid, 'dt_inner',  NF90_INT, "inner loop timestep", "s", dtinner_id)
+  !EDG end
+
   !> - Close variable definition and the file.
   CALL CHECK(NF90_ENDDEF(NCID=ncid),'nf90_enddef()')
   
@@ -126,6 +135,16 @@ subroutine output_init(scm_state, physics)
   call NetCDF_put_var(ncid, "init_hour",   scm_state%init_hour,  hour_id)
   call NetCDF_put_var(ncid, "init_minute", scm_state%init_min,   min_id)
   
+  !EDG - for DTC physTnE, add some useful info
+  ! convert to integers to simplify output
+  int_area    = INT(physics%Grid%area(1))
+  int_dt      = INT(scm_state%dt)
+  int_dtinner = INT(physics%Model%dt_inner)
+  call NetCDF_put_var(ncid, "area",      int_area, area_id)
+  call NetCDF_put_var(ncid, "dt",        int_dt, dt_id)
+  call NetCDF_put_var(ncid, "dt_inner",  int_dtinner, dtinner_id)
+  !EDG end
+
   if (physics%Model%nsswr <= 0) then
     !write out missing values at the initial time
     CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_swrad_var_id,VALUES=0.0,START=(/ 1 /)),"nf90_put_var(time_swrad_var)")
@@ -165,11 +184,13 @@ subroutine output_init(scm_state, physics)
   !> @}
 end subroutine output_init
 
-subroutine output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id)
+subroutine output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id, physics)
+  use scm_type_defs, only: physics_type
   use NetCDF_def, only : NetCDF_def_var
   
   integer, intent(in) :: ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_dim_i_id
-  
+  type(physics_type), intent(in) :: physics
+
   integer :: dummy_id
   
   !> - Define the pressure-related variables.
@@ -187,6 +208,45 @@ subroutine output_init_state(ncid, time_inst_id, hor_dim_id, vert_dim_id, vert_d
   call NetCDF_def_var(ncid, 'ql', NF90_FLOAT, "suspended resolved liquid cloud water on model layer centers",        "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
   call NetCDF_def_var(ncid, 'qi', NF90_FLOAT, "suspended resolved ice cloud water on model layer centers",           "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
   call NetCDF_def_var(ncid, 'qc', NF90_FLOAT, "suspended (resolved + SGS) total cloud water on model layer centers", "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+
+  !EDG add for DTC physTnE
+  call NetCDF_def_var(ncid, 'qci', NF90_FLOAT, "cloud water + cloud ice on model layer centers",    "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'qr', NF90_FLOAT, "suspended resolved rain on model layer centers",     "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'qs', NF90_FLOAT, "suspended resolved snow on model layer centers",     "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'qg', NF90_FLOAT, "suspended resolved graupel on model layer centers",  "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+
+  if (physics%model%ntrnc > 0) then
+      call NetCDF_def_var(ncid, 'nr', NF90_FLOAT, "rain number concentration",  "kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  endif
+  if (physics%model%ntinc > 0) then
+      call NetCDF_def_var(ncid, 'ni', NF90_FLOAT, "ice number concentration",  "kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  endif
+  if (physics%model%ntccn > 0) then
+      call NetCDF_def_var(ncid, 'ccn', NF90_FLOAT, "cloud condensation nuclei number concentration",  "kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  endif
+
+  if (physics%model%nthl > 0) then
+      call NetCDF_def_var(ncid, 'qh', NF90_FLOAT, "hail_mixing_ratio",  "kg kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  endif
+
+  if (physics%model%ntke > 0) then
+      call NetCDF_def_var(ncid, 'sgs_tke', NF90_FLOAT, "turbulent kinetic energy",  "m2 s-2", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  endif
+
+  ! Thompson water-friendly and ice-friendly aerosols
+  if (physics%model%ntwa > 0) then
+      call NetCDF_def_var(ncid, 'nwfa', NF90_FLOAT, "number concentration of water-friendly aerosols",  "kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  endif
+
+  if (physics%model%ntia > 0) then
+      call NetCDF_def_var(ncid, 'nifa', NF90_FLOAT, "number concentration of ice-friendly aerosols",  "kg-1", dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  endif
+
+  ! heights
+  call NetCDF_def_var(ncid, 'zl', NF90_FLOAT, "height at model layer centers", "m" , dummy_id, (/ hor_dim_id, vert_dim_id,   time_inst_id /))
+  call NetCDF_def_var(ncid, 'zi', NF90_FLOAT, "height at model layer interfaces", "m" , dummy_id, (/ hor_dim_id, vert_dim_i_id,   time_inst_id /))
+
+  !EDG end
   
 end subroutine output_init_state
 
@@ -244,6 +304,13 @@ subroutine output_init_sfcprop(ncid, time_inst_id, hor_dim_id, vert_dim_soil_id,
   call NetCDF_def_var(ncid, 'q2m', NF90_FLOAT, "2-m specific humidity", "kg kg-1", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'ustar', NF90_FLOAT, "surface friction velocity", "m s-1", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'tsfc', NF90_FLOAT, "surface skin temperature", "m s-1K", dummy_id, (/ hor_dim_id, time_inst_id /))
+
+  !EDG added for DTC physTnE
+  call NetCDF_def_var(ncid, 'zorl', NF90_FLOAT, "surface roughness length", "cm", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'zorlw', NF90_FLOAT, "surface roughness length over water", "cm", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'zorll', NF90_FLOAT, "surface roughness length over land", "cm", dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'zorli', NF90_FLOAT, "surface roughness length over ice", "cm", dummy_id, (/ hor_dim_id, time_inst_id /))
+  !EDG end
   
 end subroutine output_init_sfcprop
 
@@ -384,6 +451,18 @@ subroutine output_init_diag(ncid, time_inst_id, time_diag_id, time_rad_id, hor_d
   call NetCDF_def_var(ncid, 'vert_int_lwp_cf',    NF90_FLOAT, "vertically-integrated liquid water path from fractional clouds (radiation timesteps only)", "kg m-2",     dummy_id, (/ hor_dim_id, time_rad_id /))
   call NetCDF_def_var(ncid, 'vert_int_iwp_cf',    NF90_FLOAT, "vertically-integrated ice water path from fractional clouds (radiation timesteps only)",    "kg m-2",     dummy_id, (/ hor_dim_id, time_rad_id /))
   
+  ! EDG added for DTC physTnE
+  call NetCDF_def_var(ncid, 'rain_inst',     NF90_FLOAT, "total rain at this time step", "m",            dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'rainc_inst',    NF90_FLOAT, "convective rain at this time step", "m",       dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'ice_inst',      NF90_FLOAT, "ice fall at this time step", "m",              dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'snow_inst',     NF90_FLOAT, "snow fall at this time step", "m",             dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'graupel_inst',  NF90_FLOAT, "graupel fall at this time step", "m",          dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'totice',        NF90_FLOAT, "accumulated ice precipitation", "kg m-2",      dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'totsnw',        NF90_FLOAT, "accumulated snow precipitation", "kg m-2",     dummy_id, (/ hor_dim_id, time_inst_id /))
+  call NetCDF_def_var(ncid, 'totgrp',        NF90_FLOAT, "accumulated graupel precipitation", "kg m-2",  dummy_id, (/ hor_dim_id, time_inst_id /))
+  ! EDG end
+
+
   !all auxilliary diagnostics will be output every timestep (logic will need to be added to implement time averaging -- including resetting in GFS_typedefs/phys_diag_zero)
   if (physics%Model%naux2d > 0) then
     do i=1, physics%Model%naux2d
@@ -480,10 +559,15 @@ end subroutine output_append
 subroutine output_append_state(ncid, scm_state, physics)
   use scm_type_defs, only: scm_state_type, physics_type
   use NetCDF_put, only: NetCDF_put_var
+  use scm_physical_constants, only: con_g
   
   integer, intent(in) :: ncid
   type(scm_state_type), intent(in) :: scm_state
   type(physics_type), intent(in) :: physics
+  integer :: i,k
+  real(kind=dp), dimension(scm_state%n_cols,scm_state%n_levels) :: zl
+  real(kind=dp), dimension(scm_state%n_cols,scm_state%n_levels+1) :: zi
+  real(kind=dp) :: gravi
   
   call NetCDF_put_var(ncid, "pres",    scm_state%pres_l(:,:),  scm_state%itt_out)
   call NetCDF_put_var(ncid, "pres_i",  scm_state%pres_i(:,:),  scm_state%itt_out)
@@ -501,12 +585,71 @@ subroutine output_append_state(ncid, scm_state, physics)
     call NetCDF_put_var(ncid, "qc",    scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + &
                                        scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1)   + &
                                        physics%Tbd%QC_BL(:,:), scm_state%itt_out)
+    call NetCDF_put_var(ncid, "qci",   scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + &
+                                       scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1)   + &
+                                       physics%Tbd%QC_BL(:,:), scm_state%itt_out)
   else
     call NetCDF_put_var(ncid, "qc",    scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + &
                                        scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1),    &
                                        scm_state%itt_out)
+    call NetCDF_put_var(ncid, "qci",   scm_state%state_tracer(:,:,scm_state%cloud_water_index,1) + &
+                                       scm_state%state_tracer(:,:,scm_state%cloud_ice_index,1),    &
+                                       scm_state%itt_out)
   endif
-  
+
+  !EDG added for DTC physTnE
+  call NetCDF_put_var(ncid, "qr",      scm_state%state_tracer(:,:,scm_state%rain_index,1), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "qs",      scm_state%state_tracer(:,:,scm_state%snow_index,1), scm_state%itt_out)
+  call NetCDF_put_var(ncid, "qg",      scm_state%state_tracer(:,:,scm_state%graupel_index,1), scm_state%itt_out)
+
+  if (physics%model%ntrnc > 0) then
+    call NetCDF_put_var(ncid, "nr",    scm_state%state_tracer(:,:,scm_state%rain_nc_index,1), scm_state%itt_out)
+  endif
+  if (physics%model%ntinc > 0) then
+    call NetCDF_put_var(ncid, "ni",    scm_state%state_tracer(:,:,scm_state%cloud_ice_nc_index,1), scm_state%itt_out)
+  endif
+  if (physics%model%ntccn > 0) then
+    call NetCDF_put_var(ncid, "ccn",   scm_state%state_tracer(:,:,scm_state%ccn_index,1), scm_state%itt_out)
+  endif
+  if (physics%model%nthl > 0) then
+    call NetCDF_put_var(ncid, "qh",   scm_state%state_tracer(:,:,scm_state%hail_index,1), scm_state%itt_out)
+  endif
+
+  if (physics%model%ntke > 0) then
+    call NetCDF_put_var(ncid, "sgs_tke", scm_state%state_tracer(:,:,scm_state%tke_index,1), scm_state%itt_out)
+  endif
+
+  if (physics%model%ntwa > 0) then
+    call NetCDF_put_var(ncid, "nwfa", scm_state%state_tracer(:,:,scm_state%water_friendly_aerosol_index,1), scm_state%itt_out)
+    !call NetCDF_put_var(ncid, "nwfa", physics%Statein%qgrs(:,:,physics%Model%ntwa), scm_state%itt_out)
+  endif
+
+  if (physics%model%ntia > 0) then
+    call NetCDF_put_var(ncid, "nifa", scm_state%state_tracer(:,:,scm_state%ice_friendly_aerosol_index,1), scm_state%itt_out)
+    !call NetCDF_put_var(ncid, "nifa", physics%Statein%qgrs(:,:,physics%Model%ntia), scm_state%itt_out)
+  endif
+
+  ! compute height from geopotential
+  gravi = 1./con_g
+  do k=1,scm_state%n_levels
+    do i=1, scm_state%n_cols
+      zl(i,k) = gravi * scm_state%geopotential_l(i,k)
+      zi(i,k) = gravi * scm_state%geopotential_i(i,k)
+      !zl(i,k) = gravi * physics%Statein%phil(i,k)
+      !zi(i,k) = gravi * physics%Statein%phii(i,k)
+    end do
+  end do
+  k = scm_state%n_levels+1
+  do i=1, scm_state%n_cols
+    zi(i,k) = gravi * scm_state%geopotential_i(i,k)
+    !zi(i,k) = gravi * physics%Statein%phii(i,k)
+  end do
+
+  call NetCDF_put_var(ncid, "zl", zl(:,:),  scm_state%itt_out)
+  call NetCDF_put_var(ncid, "zi", zi(:,:),  scm_state%itt_out)
+
+  !EDG end
+
 end subroutine output_append_state
 
 subroutine output_append_forcing(ncid, scm_state)
@@ -581,6 +724,13 @@ subroutine output_append_sfcprop(ncid, scm_state, physics)
   call NetCDF_put_var(ncid, 'q2m', physics%Sfcprop%q2m(:), scm_state%itt_out)
   call NetCDF_put_var(ncid, 'ustar', physics%Sfcprop%uustar(:), scm_state%itt_out)
   call NetCDF_put_var(ncid, 'tsfc', physics%Sfcprop%tsfc(:), scm_state%itt_out)
+
+  !EDG added for DTC physTnE
+  call NetCDF_put_var(ncid, 'zorl',physics%Sfcprop%zorl(:), scm_state%itt_out)
+  call NetCDF_put_var(ncid, 'zorlw',physics%Sfcprop%zorlw(:), scm_state%itt_out)
+  call NetCDF_put_var(ncid, 'zorll',physics%Sfcprop%zorll(:), scm_state%itt_out)
+  call NetCDF_put_var(ncid, 'zorli',physics%Sfcprop%zorli(:), scm_state%itt_out)
+  !EDG end
   
 end subroutine output_append_sfcprop
 
@@ -695,6 +845,17 @@ subroutine output_append_diag_inst(ncid, scm_state, physics)
     call NetCDF_put_var(ncid, "v10m",        physics%Diag%v10m(:),   scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in sfc_diag)
     call NetCDF_put_var(ncid, "hpbl",        physics%Tbd%hpbl(:),    scm_state%itt_out)  !do not average (this variable is intent(out) every physics timestep in individual PBL schemes)
     
+! EDG added for DTC physTnE
+    call NetCDF_put_var(ncid, "rain_inst",     physics%Diag%rain(:),    scm_state%itt_out) 
+    call NetCDF_put_var(ncid, "rainc_inst",    physics%Diag%rainc(:),   scm_state%itt_out) 
+    call NetCDF_put_var(ncid, "ice_inst",      physics%Diag%ice(:),     scm_state%itt_out) 
+    call NetCDF_put_var(ncid, "snow_inst",     physics%Diag%snow(:),    scm_state%itt_out) 
+    call NetCDF_put_var(ncid, "graupel_inst",  physics%Diag%graupel(:), scm_state%itt_out) 
+    call NetCDF_put_var(ncid, "totice",        physics%Diag%totice(:),  scm_state%itt_out) 
+    call NetCDF_put_var(ncid, "totsnw",        physics%Diag%totsnw(:),  scm_state%itt_out) 
+    call NetCDF_put_var(ncid, "totgrp",        physics%Diag%totgrp(:),  scm_state%itt_out) 
+
+
     !all auxilliary diagnostics will be output every timestep (logic will need to be added to implement time averaging [move this to output_append_diag_avg when that happens] -- including resetting in GFS_typedefs/phys_diag_zero)
     if (physics%Model%naux2d > 0) then
       do j=1, physics%Model%naux2d
