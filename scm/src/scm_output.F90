@@ -155,7 +155,10 @@ subroutine output_init(scm_state, physics)
     !write out missing values at the initial time
     CALL CHECK(NF90_PUT_VAR(NCID=ncid,VARID=time_lwrad_var_id,VALUES=0.0,START=(/ 1 /)),"nf90_put_var(time_lwrad_var)")
     missing_value_2D = missing_value
+    missing_value_1D = missing_value
     call NetCDF_put_var(ncid, "lw_rad_heating_rate",  missing_value_2D, 1)
+    call NetCDF_put_var(ncid, "lw_up_toa_tot",  missing_value_1D, 1)
+    call NetCDF_put_var(ncid, "lw_up_toa_clr",  missing_value_1D, 1)
   end if
   if (physics%Model%nsswr <= 0 .and. physics%Model%nslwr <= 0) then
     !write out missing values at the initial time
@@ -368,6 +371,9 @@ subroutine output_init_radtend(ncid, time_swrad_id, time_lwrad_id, hor_dim_id, v
   
   call NetCDF_def_var(ncid, 'sw_rad_heating_rate', NF90_FLOAT, "total sky shortwave radiative heating rate (radiation timesteps only)", "K s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_swrad_id /))
   call NetCDF_def_var(ncid, 'lw_rad_heating_rate', NF90_FLOAT, "total sky longwave radiative heating rate (radiation timesteps only)",  "K s-1", dummy_id, (/ hor_dim_id, vert_dim_id, time_lwrad_id /))
+  call NetCDF_def_var(ncid, 'lw_up_toa_tot',   NF90_FLOAT, "total sky upward longwave flux (valid rad timesteps)",    "W m-2", dummy_id, (/ hor_dim_id, time_lwrad_id/))
+  call NetCDF_def_var(ncid, 'lw_up_toa_clr',   NF90_FLOAT, "clear sky upward longwave flux (valid rad timesteps)",      "W m-2", dummy_id, (/ hor_dim_id, time_lwrad_id /))
+
   
 end subroutine output_init_radtend
 
@@ -423,6 +429,10 @@ subroutine output_init_diag(ncid, time_inst_id, time_diag_id, time_rad_id, hor_d
   call output_init_tendency(ncid, 'dv_dt_shalconv',  "y-wind tendency due to shallow convection scheme",        "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_scnv))
   call output_init_tendency(ncid, 'dv_dt_phys',      "y-wind tendency due to all physics schemes",              "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_physics))
   call output_init_tendency(ncid, 'dv_dt_nonphys',   "y-wind tendency due to all processes other than physics", "m s-2", hor_dim_id, vert_dim_id, time_diag_id, physics%Model%dtidx(physics%Model%index_of_y_wind,physics%Model%index_of_process_non_physics))
+
+  !zhang
+  !call NetCDF_def_var(ncid, 'lw_up_toa_tot',   NF90_FLOAT, "total sky upward longwave flux (valid rad timesteps)",                     "W m-2", dummy_id, (/ hor_dim_id, time_rad_id/))
+  !call NetCDF_def_var(ncid, 'lw_up_toa_clr',   NF90_FLOAT, "clear sky upward longwave flux (valid rad timesteps)",                     "W m-2", dummy_id, (/ hor_dim_id, time_rad_id /))
 
   call NetCDF_def_var(ncid, 'sfc_dwn_sw',      NF90_FLOAT, "surface downwelling shortwave flux (valid all timesteps)",                   "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
   call NetCDF_def_var(ncid, 'sfc_up_sw',       NF90_FLOAT, "surface upwelling shortwave flux (valid all timesteps)",                     "W m-2", dummy_id, (/ hor_dim_id, time_inst_id /))
@@ -802,6 +812,8 @@ subroutine output_append_radtend(ncid, scm_state, physics)
     end if
     if (physics%Model%lslwr) then
       call NetCDF_put_var(ncid, "lw_rad_heating_rate",  physics%Radtend%htrlw(:,:), scm_state%itt_lwrad)
+      call NetCDF_put_var(ncid, "lw_up_toa_tot",  physics%Diag%topflw(:)%upfxc, scm_state%itt_lwrad)
+      call NetCDF_put_var(ncid, "lw_up_toa_clr",  physics%Diag%topflw(:)%upfx0, scm_state%itt_lwrad)
     end if
     ! TOA/SFC fluxes (on radiation timesteps)
     !physics%Diag%topfsw(i)%upfxc !sw_up_TOA_tot
@@ -833,6 +845,22 @@ subroutine output_append_diag_inst(ncid, scm_state, physics)
     
     real(kind=dp), dimension(scm_state%n_cols) :: temp_1d
     real(kind=dp), dimension(scm_state%n_cols, scm_state%n_levels) :: temp_2d
+
+
+    !zhang
+    !type topflw_type                      !< define type construct for radiation fluxes at toa
+    !    real (kind=dp) :: upfxc      !< total sky upward flux at toa
+    !    real (kind=dp) :: upfx0      !< clear sky upward flux at toa
+    !end type topflw_type
+
+    !type (topflw_type),    pointer :: topflw(:)      => null()   !< lw radiation fluxes at top, component:
+                                            !        %upfxc    - total sky upward lw flux at toa (w/m**2)
+                                            !        %upfx0    - clear sky upward lw flux at toa (w/m**2)
+
+
+    !call NetCDF_put_var(ncid, "lw_up_toa_tot",  physics%Diag%topflw(:)%upfxc, scm_state%itt_lwrad)
+    !call NetCDF_put_var(ncid, "lw_up_toa_clr",  physics%Diag%topflw(:)%upfx0, scm_state%itt_lwrad)
+    !zhang
     
     call NetCDF_put_var(ncid, "pwat",  physics%Diag%pwat(:), scm_state%itt_out)  !do not average (this variable is reset every physics timestep in GFS_MP_generic)
     
