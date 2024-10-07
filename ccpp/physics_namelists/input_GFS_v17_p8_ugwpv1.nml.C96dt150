@@ -1,5 +1,5 @@
 &gfs_physics_nml
-  fhzero       = 6
+  fhzero       = 12
   h2o_phys     = .true.
   ldiag3d      = .true.
   qdiag3d      = .true.
@@ -70,7 +70,7 @@
   random_clds  = .false.
   trans_trac   = .true.
   cnvcld       = .true.
-  xr_cnvcld    = .false.
+  xr_cnvcld    = .true.
   imfshalcnv   = 2
   imfdeepcnv   = 2
   ras          = .false.
