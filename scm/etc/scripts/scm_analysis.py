@@ -28,7 +28,7 @@ g = 9.81
 missing_value = -999
 missing_soil_levels = 4
 
-plot_ext = '.pdf' #.pdf, .eps, .ps, .png (.png is fastest, but raster)
+plot_ext = '.png' #.pdf, .eps, .ps, .png (.png is fastest, but raster)
 
 reload(spr)
 reload(sro)
@@ -248,7 +248,6 @@ dT_dt_shalconv = []
 dT_dt_micro = []
 dT_dt_conv = []
 dT_dt_ogwd = []
-dT_dt_rayleigh = []
 dT_dt_cgwd = []
 dT_dt_phys = []
 dT_dt_nonphys = []
@@ -270,7 +269,6 @@ du_dt_pbl = []
 du_dt_ogwd = []
 du_dt_deepconv = []
 du_dt_cgwd = []
-du_dt_rayleigh = []
 du_dt_shalconv = []
 du_dt_conv = []
 du_dt_phys = []
@@ -279,7 +277,6 @@ dv_dt_pbl = []
 dv_dt_ogwd = []
 dv_dt_deepconv = []
 dv_dt_cgwd = []
-dv_dt_rayleigh = []
 dv_dt_shalconv = []
 dv_dt_conv = []
 dv_dt_phys = []
@@ -606,8 +603,6 @@ for i in range(len(scm_datasets)):
     
     [dT_dt_ogwd, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_ogwd', dT_dt_ogwd, diag_time_group, time_diag, pres_l, scm_datasets[i])
     
-    [dT_dt_rayleigh, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_rayleigh', dT_dt_rayleigh, diag_time_group, time_diag, pres_l, scm_datasets[i])    
-    
     [dT_dt_cgwd, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_cgwd', dT_dt_cgwd, diag_time_group, time_diag, pres_l, scm_datasets[i])    
     
     [dT_dt_phys, diag_time_group] = replace_fill_with_nan(nc_fid, 'dT_dt_phys', dT_dt_phys, diag_time_group, time_diag, pres_l, scm_datasets[i])    
@@ -651,8 +646,6 @@ for i in range(len(scm_datasets)):
     
     [du_dt_cgwd, diag_time_group] = replace_fill_with_nan(nc_fid, 'du_dt_cgwd', du_dt_cgwd, diag_time_group, time_diag, pres_l, scm_datasets[i])
     
-    [du_dt_rayleigh, diag_time_group] = replace_fill_with_nan(nc_fid, 'du_dt_rayleigh', du_dt_rayleigh, diag_time_group, time_diag, pres_l, scm_datasets[i])
-    
     [du_dt_shalconv, diag_time_group] = replace_fill_with_nan(nc_fid, 'du_dt_shalconv', du_dt_shalconv, diag_time_group, time_diag, pres_l, scm_datasets[i])
     
     du_dt_conv.append(du_dt_deepconv[-1] + du_dt_shalconv[-1])
@@ -669,8 +662,6 @@ for i in range(len(scm_datasets)):
     [dv_dt_deepconv, diag_time_group] = replace_fill_with_nan(nc_fid, 'dv_dt_deepconv', dv_dt_deepconv, diag_time_group, time_diag, pres_l, scm_datasets[i])
     
     [dv_dt_cgwd, diag_time_group] = replace_fill_with_nan(nc_fid, 'dv_dt_cgwd', dv_dt_cgwd, diag_time_group, time_diag, pres_l, scm_datasets[i])
-    
-    [dv_dt_rayleigh, diag_time_group] = replace_fill_with_nan(nc_fid, 'dv_dt_rayleigh', dv_dt_rayleigh, diag_time_group, time_diag, pres_l, scm_datasets[i])
     
     [dv_dt_shalconv, diag_time_group] = replace_fill_with_nan(nc_fid, 'dv_dt_shalconv', dv_dt_shalconv, diag_time_group, time_diag, pres_l, scm_datasets[i])
     

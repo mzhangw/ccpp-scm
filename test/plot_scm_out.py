@@ -53,7 +53,8 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
 
     # Which fields to plot? (default is subset of full fields)
     if vars2plt is None:
-        vars2plot = vars2plot_SUB
+      #  vars2plot = vars2plot_SUB
+         vars2plot = vars2plot_ALL
     else:
         vars2plot = vars2plt
     # end if
@@ -112,16 +113,16 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
                     # Baselines and RTs on same plot
                     if plot_diff: plt.subplot(2,1,1)
                     plt.title(SCM_BL[var].description)
-                    plt.plot(x1, y1,  color='blue')
-                    if plot_diff: plt.plot(x2, y2,  color='black')
+                    plt.plot(x1, y1,  color='red')
+                    if plot_diff: plt.plot(x2, y2,  color='green')
                     plt.ylabel('('+SCM_BL[var].units+')')
                     plt.xlabel('(hours)')
                     
                     # Difference (Baseline-MRT)
                     if plot_diff:
                         plt.subplot(2,1,2)
-                        plt.title("Difference (blue - black)")
-                        plt.plot(x1, y1 - y2,  color='red')
+                        plt.title("Difference (red - green)")
+                        plt.plot(x1, y1 - y2,  color='black')
                         plt.plot(x1, np.zeros(len(y1)), color='grey',linestyle='dashed')
                         plt.ylabel('('+SCM_BL[var].units+')')
                         plt.xlabel('(hours)')
@@ -154,41 +155,63 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
                 # Finally, make figure.
                 if (np.size(x1) > 1):
                     fig = plt.figure(figsize=(13,10))
+                    #mz Compute limits for color bar
+                    vmin1, vmax1 = np.min(z1), np.max(z1)
                     if file_rt is not None: plt.subplot(3,1,1)
-                    plt.contourf(x1, y1, z1, 20, cmap='YlGnBu')
-                    plt.ylim(1000,200)
+                    #plt.contourf(x1, y1, z1, 20, cmap='PuBu', vmin=vmin1, vmax=vmax1)
+                    levels=np.linspace(vmin1,vmax1,20)
+                    plt.contourf(x1, y1, z1, 20,vmin=vmin1, vmax=vmax1, cmap='PuBu')
+                    plt.ylim(1000,0.01)
                     plt.xlim(0,np.max(x1))
                     plt.ylabel('(Pa)')
                     plt.xlabel('(hours)')
                     cbr = plt.colorbar()
                     cbr.set_label('('+SCM_BL[var].units+')')
+
+                    # Set custom y-ticks for the first subplot
+                    y_ticks = [1000, 900, 850, 700, 500, 250, 100, 50, 0.1]
+                    plt.yticks(y_ticks, fontsize=8)
+                    # Add only y-axis grid lines
+                    plt.grid(axis='y', linestyle='--', linewidth=0.5, color='gray')
                     if file_rt is not None:
                         # SCM RTs
                         plt.subplot(3,1,2)
-                        plt.contourf(x2, y2, z2, 20, cmap='YlGnBu')
-                        plt.ylim(1000,200)
+                        #plt.contourf(x2, y2, z2, 20, cmap='PuBu',vmin=vmin1, vmax=vmax1)
+                        plt.contourf(x2, y2, z2, 20, vmin=vmin1, vmax=vmax1, cmap='PuBu')
+                        plt.ylim(1000,0.01)
                         plt.xlim(0,np.max(x1))
                         plt.ylabel('(Pa)')
                         plt.xlabel('(hours)')
                         cbr = plt.colorbar()
                         cbr.set_label('('+SCM_RT[var].units+')')
+                        plt.yticks(y_ticks, fontsize=8)
+                        # Add only y-axis grid lines
+                        plt.grid(axis='y', linestyle='--', linewidth=0.5, color='gray')
                     # end if
                     # Only plot differences if requested, and only if they are non-zero.
                     if plot_diff:
                         dz = z1-z2
                         if (np.count_nonzero(dz) > 0):
                             plt.subplot(3,1,3)
-                            plt.title("Difference (top - middle)", fontsize=8)
-                            plt.contourf(x2, y2, dz, 20, cmap='bwr')
-                            plt.ylim(1000,200)
+                            #mz Set symmetric color limits for the difference
+                            vmin = -np.max(np.abs(dz))
+                            vmax = np.max(np.abs(dz))
+                            c3 = plt.contourf(x2, y2, dz, 20, cmap='bwr', vmin=vmin, vmax=-vmin)
+                           # plt.title("Difference (top - middle)", fontsize=8)
+                           # plt.contourf(x2, y2, dz, 20, cmap='bwr')
+                            plt.ylim(1000,0.01)
                             plt.ylabel('(Pa)')
                             plt.xlabel('(hours)')
-                            cbr = plt.colorbar()
+                            cbr = plt.colorbar(c3)
                             cbr.set_label('('+SCM_RT[var].units+')')
+                            plt.yticks(y_ticks, fontsize=8)
+                            # Add only y-axis grid lines
+                            plt.grid(axis='y', linestyle='--', linewidth=0.5, color='gray')
                         # end if (no differences exist)
                     # end if     (plot differences)
                     # Save figure
                     fileOUT = 'scm.' + var +'.png'
+                    plt.tight_layout()  # Optional: Adjust layout to prevent overlap
                     plt.show()
                     plt.savefig(fileOUT)
                     plot_files.append(fileOUT)
