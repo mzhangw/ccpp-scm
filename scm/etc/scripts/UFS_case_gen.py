@@ -773,7 +773,10 @@ def get_IC_data_from_UFS_history(dir, i, j, lam, tile):
     icmr    = nc_file['icmr'][0,::-1,i,j]
     pressfc = nc_file['pressfc'][0,i,j]
     tmp     = nc_file['tmp'][0,::-1,i,j]
-    
+    #mz
+    w_ls   = nc_file['dzdt'][0,::-1,i,j]
+    omga   = nc_file['omga'][0,::-1,i,j]
+
     delz = np.asarray(delz)
     zh = np.zeros(nlevs)
     zh[0] = 0.5*delz[0]
@@ -790,6 +793,8 @@ def get_IC_data_from_UFS_history(dir, i, j, lam, tile):
         "dz": dz,
         "ua": np.asarray(ugrd),
         "va": np.asarray(vgrd),
+        'wa': np.asarray(w_ls),
+        'wap': np.asarray(omga),
         "qv": np.asarray(spfh),
         "o3": np.asarray(o3mr),
         "ql": np.asarray(clwmr),
@@ -2395,6 +2400,9 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     u_lay   = []
     v_lay   = []
     time_hr = []
+    #mz
+    w_lay   = []
+    omga_lay = []
 
     # Get grid from UFS IC data
     (ic_grid_lon, ic_grid_lat) = get_initial_lon_lat_grid(grid_dir, tile, lam)
@@ -2436,6 +2444,9 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
                 qv_data   = regridder(nc_file['spfh'][0,::-1,:,:])
                 u_data    = regridder(nc_file['ugrd'][0,::-1,:,:])
                 v_data    = regridder(nc_file['vgrd'][0,::-1,:,:])
+                #mz
+                w_data    = regridder(nc_file['dzdt'][0,::-1,:,:])
+                omga_data= regridder(nc_file['omga'][0,::-1,:,:])
                 i_get     = 0
                 j_get     = 0
             # Same grids for history file (data_grid) to IC file (ic_grid).
@@ -2445,6 +2456,9 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
                 qv_data   = nc_file['spfh'][0,::-1,:,:]
                 u_data    = nc_file['ugrd'][0,::-1,:,:]
                 v_data    = nc_file['vgrd'][0,::-1,:,:]
+                #mz
+                w_data    = nc_file['dzdt'][0,::-1,:,:]
+                omga_data=  nc_file['omga'][0,::-1,:,:]
                 i_get     = i
                 j_get     = j
             # end if
@@ -2455,9 +2469,28 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             qv_data = nc_file['spfh'][0,::-1,:,:]
             u_data  = nc_file['ugrd'][0,::-1,:,:]
             v_data  = nc_file['vgrd'][0,::-1,:,:]
+            #mz
+            w_data    = nc_file['dzdt'][0,::-1,:,:]
+            omga_data=  nc_file['omga'][0,::-1,:,:]
             j_get   = tile_jj
             i_get   = tile_ii
         # end if (use-nearest)
+
+        #mz placeholder to smooth
+
+       
+        def smooth(data, window_size=5):
+                  return np.convolve(data.flatten(), np.ones(window_size)/window_size, mode='same').reshape(data.shape)
+
+
+        # Smooth the data
+        w_data_smooth = smooth(w_data, window_size=5)
+        omga_data_smooth = smooth(omga_data, window_size=5)
+
+        w_data = w_data_smooth
+        omga_data = omga_data_smooth
+
+        #mz
 
         # Store surface pressure.
         ps.append(ps_data[j_get,i_get])
@@ -2488,6 +2521,9 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         qv_lay.append(qv_data[:,j_get,i_get])
         u_lay.append(u_data[:,j_get,i_get])
         v_lay.append(v_data[:,j_get,i_get])
+        #mz
+        w_lay.append(w_data[:,j_get,i_get])
+        omga_lay.append(omga_data[:,j_get,i_get])
         time_hr.append(nc_file['time'][0])
 
         # Close file
@@ -2502,6 +2538,9 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     qv_lay  = np.asarray(qv_lay)
     u_lay   = np.asarray(u_lay)
     v_lay   = np.asarray(v_lay)
+    #mz
+    w_lay   = np.asarray(w_lay)
+    omga_lay = np.asarray(omga_lay)
     time_hr = np.asarray(time_hr)
 
     # Compute virtual temperature.
@@ -2728,12 +2767,21 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     qv_rev     = np.zeros([1,nlevs])
     u_rev      = np.zeros([1,nlevs])
     v_rev      = np.zeros([1,nlevs])
+    #mz
+    w_rev      = np.zeros([1,nlevs])
+    omga_rev   = np.zeros([1,nlevs])
+
     tv_layr    = np.zeros([n_files+1,nlevs])
     qv_layr    = np.zeros([n_files+1,nlevs])
     u_layr     = np.zeros([n_files+1,nlevs])
     v_layr     = np.zeros([n_files+1,nlevs])
     p_layr     = np.zeros([n_files+1,nlevs])
     p_levr     = np.zeros([n_files+1,nlevs+1])
+    #mz
+    w_layr     = np.zeros([n_files+1,nlevs])
+    omga_layr  = np.zeros([n_files+1,nlevs])
+
+
 
     #
     # First timestep...
@@ -2768,7 +2816,7 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     v_init_rev  = state_IC["va"][::-1]
     v_rev_new   = fv3_remap.map1_ppm(nlevs, from_p, v_init_rev[np.newaxis, :], 0.0,    \
                                      nlevs, to_p, 0, 0, -1, kord_tm )
-    
+
     # Store
     p_layr[0,:]  = p_lay[0,:]
     p_levr[0,:]  = p_lev[0,:]
@@ -2776,6 +2824,10 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     u_layr[0,:]  = u_rev_new[0,::-1]
     tv_layr[0,:] = tv_rev_new[0,::-1]
     qv_layr[0,:] = qv_rev_new[0,::-1]
+    #mz: not in IC 
+    w_layr[0,:]  = 0.0
+    omga_layr[0,:]  = 0.0
+
     
     # Subsequent timestep(s). (exact-mode only)
     if exact_mode:
@@ -2803,6 +2855,16 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             v_rev[0,:] = v_lay[t,::-1]
             v_rev_new  = fv3_remap.map1_ppm(nlevs, from_p, v_rev, 0.0, nlevs, to_p,        \
                                             0, 0, -1, kord_tm )
+            #mz
+            # vertical wind  @ time > 0
+            w_rev[0,:] = w_lay[t,::-1]
+            w_rev_new  = fv3_remap.map1_ppm(nlevs, from_p, w_rev, 0.0, nlevs, to_p,        \
+                                            0, 0, -1, kord_tm )
+            # Meridional wind @ time > 0
+            omga_rev[0,:] = omga_lay[t,::-1]
+            omga_rev_new  = fv3_remap.map1_ppm(nlevs, from_p, omga_rev, 0.0, nlevs, to_p,        \
+                                            0, 0, -1, kord_tm )
+
             # Store
             p_layr[t+1,:]  = p_lay[t+1,:]
             p_levr[t+1,:]  = p_lev[t+1,:]
@@ -2810,6 +2872,9 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             qv_layr[t+1,:] = qv_rev_new[0,::-1]
             u_layr[t+1,:]  = u_rev_new[0,::-1]
             v_layr[t+1,:]  = v_rev_new[0,::-1]
+            #mz
+            w_layr[t+1,:]  = w_rev_new[0,::-1]
+            omga_layr[t+1,:]  = omga_rev_new[0,::-1]
         # end for
     
         #
@@ -2819,6 +2884,9 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         qv_layr[t+2,:] = qv_layr[t+1,:]
         u_layr[t+2,:]  = u_layr[t+1,:]
         v_layr[t+2,:]  = v_layr[t+1,:]
+        #mz
+        w_layr[t+2,:]  = w_layr[t+1,:]
+        omga_layr[t+2,:]  = omga_layr[t+1,:]
     # end if (exact-mode)
     
     # Temperature
@@ -2828,6 +2896,8 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     stateInit = {"p_lay":  p_lay[0,:],  \
                  "t_lay":  t_lay[0,:],  \
                  "qv_lay": qv_lay[0,:], \
+                 "w_lay":  w_lay[0,:],  \
+                 "omga_lay": omga_lay[0,:], \
                  "u_lay":  u_lay[0,:],  \
                  "v_lay":  v_lay[0,:]}
     
@@ -2972,6 +3042,10 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         tot_advec_qv = np.zeros((nlevs,ntimes),dtype=float)
         tot_advec_u = np.zeros((nlevs,ntimes),dtype=float)
         tot_advec_v = np.zeros((nlevs,ntimes),dtype=float)
+        #mz
+        w_ls = np.zeros((nlevs,ntimes),dtype=float)
+        omga = np.zeros((nlevs,ntimes),dtype=float)
+
             
         time[0] = 0.0
         time[1] = sec_in_hr*time_hr[0] - time_setback #forcing period should extend from beginning of diagnostic period to right BEFORE the next one
@@ -2987,6 +3061,11 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
         tot_advec_u[:,1] = tot_advec_u[:,0]
         tot_advec_v[:,0] = dvdt_adv[0,:]
         tot_advec_v[:,1] = tot_advec_v[:,0]
+        #mz
+        w_ls[:,0] = w_lay[0,:] 
+        w_ls[:,1] = w_ls[:,0]
+        omga[:,0] = omga_lay[0,:]
+        omga[:,1] = omga[:,0]
         
         for t in range(1,n_files):
             time[2*t] = sec_in_hr*time_hr[t-1]
@@ -3003,6 +3082,12 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
             tot_advec_u[:,2*t+1] = tot_advec_u[:,2*t]
             tot_advec_v[:,2*t] = dvdt_adv[t,:]
             tot_advec_v[:,2*t+1] = tot_advec_v[:,2*t]
+            #mz
+            w_ls[:,2*t] = w_lay[t,:] 
+            w_ls[:,2*t+1] = w_ls[:,2*t]
+            omga[:,2*t] = omga_lay[t,:]
+            omga[:,2*t+1] = omga[:,2*t]
+
         # end for
     elif (time_method == 'gradient'): #this produced wonky results in the SCM; avoid until investigated more
         print('Forcing can be interpolated in time since the forcing terms are assumed to follow a constant time-gradient.')
@@ -3055,14 +3140,14 @@ def get_UFS_forcing_data(nlevs, state_IC, location, use_nearest, forcing_dir, gr
     # end if
     
     #
-    w_ls         = np.zeros((nlevs,ntimes),dtype=float)
-    omega        = np.zeros((nlevs,ntimes),dtype=float)
+    #mz w_ls         = np.zeros((nlevs,ntimes),dtype=float)
+    #mz omega        = np.zeros((nlevs,ntimes),dtype=float)
     rad_heating  = np.zeros((nlevs,ntimes),dtype=float)
 
     forcing = {
         "time":     time,
         "wa":       w_ls.swapaxes(0,1),
-        "wap":      omega.swapaxes(0,1),
+        "wap":      omga.swapaxes(0,1),
         "tnta_rad": rad_heating.swapaxes(0,1),
         "ps_forc":  np.ones(ntimes)*ps[0],
         "pa_forc":  pressure_forc.swapaxes(0,1),

@@ -108,20 +108,21 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
                 
                 # Make figure
                 if (np.size(x1) > 1):
-                    fig = plt.figure(figsize=(13,10))
+                    #fig = plt.figure(figsize=(13,10))
+                    fig = plt.figure(figsize=(5,10))
                     
                     # Baselines and RTs on same plot
                     if plot_diff: plt.subplot(2,1,1)
                     plt.title(SCM_BL[var].description)
                     plt.plot(x1, y1,  color='red')
-                    if plot_diff: plt.plot(x2, y2,  color='green')
+                    if plot_diff: plt.plot(x2, y2,  color='blue')
                     plt.ylabel('('+SCM_BL[var].units+')')
                     plt.xlabel('(hours)')
                     
                     # Difference (Baseline-MRT)
                     if plot_diff:
                         plt.subplot(2,1,2)
-                        plt.title("Difference (red - green)")
+                        plt.title("Difference (red - blue)")
                         plt.plot(x1, y1 - y2,  color='black')
                         plt.plot(x1, np.zeros(len(y1)), color='grey',linestyle='dashed')
                         plt.ylabel('('+SCM_BL[var].units+')')
@@ -154,13 +155,17 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
 
                 # Finally, make figure.
                 if (np.size(x1) > 1):
-                    fig = plt.figure(figsize=(13,10))
+                    #fig = plt.figure(figsize=(13,10))
+                    ;z_min = min(np.min(z1), np.min(z2))
+                    z_max = max(np.max(z1), np.max(z2))
+                    z_min = -1*z_max
+
+                    fig = plt.figure(figsize=(5,10))
                     #mz Compute limits for color bar
                     vmin1, vmax1 = np.min(z1), np.max(z1)
                     if file_rt is not None: plt.subplot(3,1,1)
                     #plt.contourf(x1, y1, z1, 20, cmap='PuBu', vmin=vmin1, vmax=vmax1)
-                    levels=np.linspace(vmin1,vmax1,20)
-                    plt.contourf(x1, y1, z1, 20,vmin=vmin1, vmax=vmax1, cmap='PuBu')
+                    plt.contourf(x1, y1, z1, levels=np.linspace(z_min, z_max, 20), cmap='gist_ncar', vmin=z_min, vmax=z_max)
                     plt.ylim(1000,0.01)
                     plt.xlim(0,np.max(x1))
                     plt.ylabel('(Pa)')
@@ -176,8 +181,8 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
                     if file_rt is not None:
                         # SCM RTs
                         plt.subplot(3,1,2)
-                        #plt.contourf(x2, y2, z2, 20, cmap='PuBu',vmin=vmin1, vmax=vmax1)
-                        plt.contourf(x2, y2, z2, 20, vmin=vmin1, vmax=vmax1, cmap='PuBu')
+                        #plt.contourf(x2, y2, z2, 20, vmin=vmin1, vmax=vmax1, cmap='gist_ncar')
+                        plt.contourf(x2, y2, z2, levels=np.linspace(z_min, z_max, 20), cmap='gist_ncar', vmin=z_min, vmax=z_max)
                         plt.ylim(1000,0.01)
                         plt.xlim(0,np.max(x1))
                         plt.ylabel('(Pa)')
