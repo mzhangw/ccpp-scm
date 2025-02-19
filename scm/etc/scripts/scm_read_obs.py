@@ -6,6 +6,70 @@ import numpy as np
 import math
 import forcing_file_common as ffc
 
+#mz
+def read_UFS_obs(obs_file, time_slices, date):
+
+    obs_time_slice_indices = []
+
+    obs_fid = Dataset(obs_file, 'r')
+    obs_fid.set_auto_mask(False)
+
+    obs_time = obs_fid.variables['time'][:]
+    obs_datetime_string = obs_fid.getncattr('startDate')
+
+    #get initial date from global file attribute
+    obs_init_datetime = datetime.datetime.strptime(obs_datetime_string, '%Y%m%d%H%M%S')
+
+    obs_date = []
+    for i in range(obs_time.size):
+        obs_date.append(obs_init_datetime + datetime.timedelta(seconds = obs_time[i]))
+    obs_date = np.array(obs_date)
+
+    for time_slice in time_slices:
+      start_date = datetime.datetime(time_slices[time_slice]['start'][0], time_slices[time_slice]['start'][1],time_slices[time_slice]['start'][2], time_slices[time_slice]['start'][3], time_slices[time_slice]['start'][4])
+      end_date = datetime.datetime(time_slices[time_slice]['end'][0], time_slices[time_slice]['end'][1],time_slices[time_slice]['end'][2], time_slices[time_slice]['end'][3], time_slices[time_slice]['end'][4])
+      start_date_index = np.where(obs_date == start_date)[0][0]
+      end_date_index = np.where(obs_date == end_date)[0][0]
+      obs_time_slice_indices.append([start_date_index, end_date_index])
+      print (start_date, end_date, start_date_index, end_date_index, obs_date[start_date_index], obs_date[end_date_index])
+
+    #find the index corresponding to the start of the simulations
+    obs_start_index = np.where(obs_date == date[0][0])[0]
+    obs_time = obs_time - obs_time[obs_start_index]
+
+    #pressure stored in kPa (pressure is 0 for initial time)
+    obs_pres = obs_fid.variables['levs'][1:,:]
+
+    #get average pressure levels
+    obs_pres_l = np.mean(obs_pres[:,:], (0))
+
+    #obs_theta = obs_fid.variables['potential_temp'][1:,:]
+    #print obs_theta[0,:]
+    #obs_T = (obs_pres/ffc.p0)**(ffc.R_dry/ffc.c_p)*obs_theta
+
+    obs_T = obs_fid.variables['temp'][1:,:]
+
+    #kg/kg
+    obs_q = obs_fid.variables['qv'][1:,:]
+    #print obs_q[0,:]
+    #obs_cld = obs_fid.variables['cloud_fraction'][1:,:]
+    #obs_qi= obs_fid.variables['qi'][:]
+    #obs_ql= obs_fid.variables['ql'][:]
+    obs_u = obs_fid.variables['u'][:]
+    obs_v = obs_fid.variables['v'][:]
+
+
+    #print obs_cld[0,:]
+
+    return_dict = {'time': obs_time, 'date': obs_date, 'time_slice_indices': obs_time_slice_indices, 'pres_l': obs_pres_l,
+        'T': obs_T, 'qv': obs_q, 'u': obs_u, 'v': obs_v}
+
+    obs_fid.close()
+
+    return return_dict
+
+#mz
+
 def read_MOSAiC_obs(obs_file, time_slices, date):
     obs_time_slice_indices = []
 

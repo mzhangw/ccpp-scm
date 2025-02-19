@@ -1,0 +1,3 @@
+./cmp_scmout.py -fbl /scratch2/BMC/ufs-phys/Man.Zhang/_case_gen/ccpp-scm_v7_hr_v4/scm/run/fm1_sfs_15c/output_fm1_sfs_NH_noW_15c_n008_SCM_GFS_v17_p8_ugwpv1/output.nc -frt /scratch2/BMC/ufs-phys/Man.Zhang/_case_gen/ccpp-scm_v7_hr_v4/scm/run/fm1_sfs_15c/output_fm1_sfs_HYD_noW_15c_n008_SCM_GFS_v17_p8_ugwpv1/output.nc
+
+./cmp_scmout.py -fbl /scratch2/BMC/ufs-phys/Man.Zhang/_case_gen/ccpp-scm_v7_hr_v4/scm/run/fm1_sfs_15c_12hly/output_fm1_sfs_NH_noW_15c_n000_SCM_GFS_v17_p8_ugwpv1/output.nc -frt /scratch2/BMC/ufs-phys/Man.Zhang/_case_gen/ccpp-scm_v7_hr_v4/scm/run/fm1_sfs_15c_12hly/output_fm1_sfs_HYD_noW_15c_n000_SCM_GFS_v17_p8_ugwpv1/output.nc

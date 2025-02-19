@@ -849,6 +849,9 @@ if(obs_compare and obs_file):
         obs_dict = sro.read_gabls3_obs(obs_file, time_slices, date_inst)
     elif('MOSAiC' in case_name.strip()):
         obs_dict = sro.read_MOSAiC_obs(obs_file, time_slices, date_inst)
+    #mz
+    elif('fm1_sfs' in case_name.strip()):
+        obs_dict = sro.read_UFS_obs(obs_file, time_slices, date_inst)
 
 try:
     os.makedirs(plot_dir)

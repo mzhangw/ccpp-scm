@@ -61,7 +61,9 @@ def plot_profile_multi(z, values, labels, x_label, y_label, filename, obs_z=None
         return
     
     fig = plt.figure()
-    colors = ['#e41a1c','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
+    #add orange
+    #colors = ['#e41a1c','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
+    colors = ['#e41a1c','#ffa500','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
     linestyles = ['-','--','-.',':']
     markers = ['+','o','*','s','d','^','v','p','h']
     linewidth_val = 2.0
@@ -302,7 +304,8 @@ def plot_time_series_multi(time, values, labels, x_label, y_label, filename, obs
     fig = plt.figure()
     
     lines = []
-    colors = ['#e41a1c','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
+    #colors = ['#e41a1c','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
+    colors = ['#e41a1c','#ffa500','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
     linestyles = ['-','--','-.',':']
     markers = ['+','o','*','s','d','^','v','p','h']
     linewidth_val = 2.0
@@ -507,7 +510,8 @@ def plot_profile_multi_ens(z, values, labels, x_label, y_label, filename, obs_z=
 
 
     fig = plt.figure()
-    colors = ['#e41a1c','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
+    #colors = ['#e41a1c','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
+    colors = ['#e41a1c','#ffa500','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
     linestyles = ['-','--','-.',':']
     markers = ['+','o','*','s','d','^','v','p','h']
     hatches = ['/','\\','|','-']
@@ -684,7 +688,8 @@ def plot_time_series_multi_ens(time, values, labels, x_label, y_label, filename,
             values_ens_processed.append(np.percentile(values[i], [0, 10, 25, 50, 75, 90, 100], axis=0, interpolation='nearest'))
 
     lines = []
-    colors = ['#e41a1c','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
+    #colors = ['#e41a1c','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
+    colors = ['#e41a1c','#ffa500','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
     linestyles = ['-','--','-.',':']
     markers = ['+','o','*','s','d','^','v','p','h']
     hatches = ['/','\\','|','-']
@@ -814,7 +819,8 @@ def plot_time_series_multi_ens(time, values, labels, x_label, y_label, filename,
 def plot_scatter_multi(x, y, x_label, y_label, filename, x_lim=[], y_lim=[], color_index=None):
     plt.rc('text', usetex=latex_labels)
 
-    colors = ['#e41a1c','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
+    #colors = ['#e41a1c','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
+    colors = ['#e41a1c','#ffa500','#4daf4a','#377eb8','#984ea3','#ff7f00','#a65628','#f781bf','#ffff33']
     if color_index is None:
         color_index = 0
     else:
