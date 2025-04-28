@@ -1,5 +1,5 @@
 &gfs_physics_nml
-  fhzero       = 1
+  fhzero       = 12
   h2o_phys     = .true.
   ldiag3d      = .true.
   qdiag3d      = .true.
@@ -12,7 +12,7 @@
   ltaerosol    = .false.
   lradar       = .true.
   ttendlim     = -999
-  dt_inner     = 300
+  dt_inner     = 150
   sedi_semi    = .true.
   decfl        = 10
   oz_phys      = .false.

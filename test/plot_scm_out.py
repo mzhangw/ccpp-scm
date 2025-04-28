@@ -16,6 +16,9 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
     vars2plot_ALL = \
         ["pres", "pres_i","sigma","sigma_i","pres_s","qv","T","u","v","ql",   \
          "qi","qc","qv_force_tend","T_force_tend","u_force_tend",             \
+         "rad_cloud_fraction","rad_cloud_lwp","rad_cloud_iwp","rad_cloud_rwp", \
+         "rad_cloud_swp","rad_eff_rad_ql","rad_eff_rad_qi","rad_eff_rad_qr", \
+         "rad_eff_rad_qs",                  \
          "v_force_tend","w_ls","u_g","v_g","dT_dt_rad_forc","h_advec_thil",   \
          "h_advec_qt", "v_advec_thil","v_advec_qt","T_s","lhf","shf",         \
          "tprcp_inst","tprcp_rate_inst","t2m","q2m","ustar","tsfc","tau_u",   \
@@ -108,25 +111,28 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
                 
                 # Make figure
                 if (np.size(x1) > 1):
-                    #fig = plt.figure(figsize=(13,10))
+                    #fig = plt.figure(figsize=(8,10))
                     fig = plt.figure(figsize=(5,10))
                     
                     # Baselines and RTs on same plot
                     if plot_diff: plt.subplot(2,1,1)
                     plt.title(SCM_BL[var].description)
-                    plt.plot(x1, y1,  color='orange')
-                    if plot_diff: plt.plot(x2, y2,  color='red')
+                    plt.plot(x1, y1,  color='red')
+                    if plot_diff: plt.plot(x2, y2,  color='black')
                     plt.ylabel('('+SCM_BL[var].units+')')
                     plt.xlabel('(hours)')
-                    
+                    #plt.xlim(0,240)
+                    plt.xlim(0,np.max(x1))
                     # Difference (Baseline-MRT)
                     if plot_diff:
                         plt.subplot(2,1,2)
-                        plt.title("Difference (Orange - red)")
+                        plt.title("Difference (red - black)")
                         plt.plot(x1, y1 - y2,  color='black')
                         plt.plot(x1, np.zeros(len(y1)), color='grey',linestyle='dashed')
                         plt.ylabel('('+SCM_BL[var].units+')')
                         plt.xlabel('(hours)')
+                        #plt.xlim(0,240)
+                        plt.xlim(0,np.max(x1))
                     # Save figure
                     fileOUT = 'scm.' + var +'.png'
                     plt.savefig(fileOUT)
@@ -155,7 +161,7 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
 
                 # Finally, make figure.
                 if (np.size(x1) > 1):
-                    #fig = plt.figure(figsize=(13,10))
+                    #fig = plt.figure(figsize=(8,10))
                     
                     z_min = min(np.min(z1), np.min(z2))
                     z_max = max(np.max(z1), np.max(z2))
@@ -165,10 +171,11 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
                     #mz Compute limits for color bar
                     vmin1, vmax1 = np.min(z1), np.max(z1)
                     if file_rt is not None: plt.subplot(3,1,1)
-                    plt.contourf(x1, y1, z1, 20, cmap='gist_ncar', vmin=vmin1, vmax=vmax1)
-                    #plt.contourf(x1, y1, z1, levels=np.linspace(z_min, z_max, 20), cmap='gist_ncar', vmin=z_min, vmax=z_max)
+                    plt.contourf(x1, y1, z1, 30, cmap='gist_ncar', vmin=z_min, vmax=z_max)
+                    #plt.contourf(x1, y1, z1, levels=np.linspace(z_min, z_max, 20), cmap='gist_ncar')
                     plt.ylim(1000,100)
                     plt.xlim(0,np.max(x1))
+                    #plt.xlim(0,240)
                     plt.ylabel('(Pa)')
                     plt.xlabel('(hours)')
                     cbr = plt.colorbar()
@@ -177,21 +184,26 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
                     # Set custom y-ticks for the first subplot
                     #y_ticks = [1000, 900, 850, 700, 500, 250, 100, 50, 0.1]
                     y_ticks = [1000, 925, 850, 700, 500, 250, 100]
+                    #y_ticks = [1000, 950, 900, 850, 800, 750, 700]
+                    x_ticks = [0,24,48,72,96,120,144,168,192,216,240,264,288,312,336]
                     plt.yticks(y_ticks, fontsize=10)
+                    #plt.xticks(x_ticks, fontsize=10)
                     # Add only y-axis grid lines
                     plt.grid(axis='y', linestyle='--', linewidth=0.5, color='gray')
                     if file_rt is not None:
                         # SCM RTs
                         plt.subplot(3,1,2)
-                        plt.contourf(x2, y2, z2, 20, vmin=vmin1, vmax=vmax1, cmap='gist_ncar')
-                        #plt.contourf(x2, y2, z2, levels=np.linspace(z_min, z_max, 20), cmap='gist_ncar', vmin=z_min, vmax=z_max)
+                        plt.contourf(x2, y2, z2, 30, vmin=z_min, vmax=z_max, cmap='gist_ncar')
+                        #plt.contourf(x2, y2, z2, levels=np.linspace(z_min, z_max, 20), cmap='gist_ncar')
                         plt.ylim(1000,100)
                         plt.xlim(0,np.max(x1))
+                        #plt.xlim(0,240)
                         plt.ylabel('(Pa)')
                         plt.xlabel('(hours)')
                         cbr = plt.colorbar()
                         cbr.set_label('('+SCM_RT[var].units+')')
                         plt.yticks(y_ticks, fontsize=10)
+                        #plt.xticks(x_ticks, fontsize=10)
                         # Add only y-axis grid lines
                         plt.grid(axis='y', linestyle='--', linewidth=0.5, color='gray')
                     # end if
@@ -201,17 +213,20 @@ def plot_results(file_bl, file_rt=None, vars2plt=None):
                         if (np.count_nonzero(dz) > 0):
                             plt.subplot(3,1,3)
                             #mz Set symmetric color limits for the difference
-                            vmin = -np.max(np.abs(dz))
-                            vmax = np.max(np.abs(dz))
-                            c3 = plt.contourf(x2, y2, dz, 20, cmap='bwr', vmin=vmin, vmax=-vmin)
+                            vmin2 = -np.max(np.abs(dz))
+                            vmax2 = np.max(np.abs(dz))
+                            c3 = plt.contourf(x2, y2, dz, 20, cmap='bwr', vmin=vmin2, vmax=vmax2)
                            # plt.title("Difference (top - middle)", fontsize=8)
                            # plt.contourf(x2, y2, dz, 20, cmap='bwr')
+                            #plt.xlim(0,240)
+                            plt.xlim(0,np.max(x1))
                             plt.ylim(1000,100)
                             plt.ylabel('(Pa)')
                             plt.xlabel('(hours)')
                             cbr = plt.colorbar(c3)
                             cbr.set_label('('+SCM_RT[var].units+')')
                             plt.yticks(y_ticks, fontsize=10)
+                            #plt.xticks(x_ticks, fontsize=10)
                             # Add only y-axis grid lines
                             plt.grid(axis='y', linestyle='--', linewidth=0.5, color='gray')
                         # end if (no differences exist)
