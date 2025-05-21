@@ -38,16 +38,16 @@
   do_gwd_opt_psl = .true.
   psl_gwd_dx_factor = 6.0
   min_lakeice  = 0.15
-  min_seaice   = 1.0e-6
-  use_cice_alb = .true.
+  min_seaice   = 0.15
+  use_cice_alb = .false.
   pdfcld       = .false.
-  fhswr        = 1200.
-  fhlwr        = 1200.
+  fhswr        = 3600.
+  fhlwr        = 3600.
   progsigma    = .true.
-  progomega    = .false.
   betascu      = 8.0
   betamcu      = 1.0
   betadcu      = 2.0
+  progomega    = .true.
   ialb         = 2
   iems         = 2 
   iaer         = 1011
@@ -66,7 +66,7 @@
   hybedmf      = .false.
   satmedmf     = .true.
   isatmedmf    = 1
-  lheatstrg    = .true.
+  lheatstrg    = .false.
   lseaspray    = .true.
   random_clds  = .false.
   trans_trac   = .true.
@@ -86,6 +86,7 @@
   iopt_run     = 1
   iopt_sfc     = 3
   iopt_trs     = 2
+  iopt_diag    = 2
   iopt_frz     = 1
   iopt_inf     = 1
   iopt_rad     = 3
@@ -94,7 +95,7 @@
   iopt_tbot    = 2
   iopt_stc     = 3
   debug        = .false.
-  nstf_name    = 2,1,0,0,0
+  nstf_name    = 2,0,0,0,0
   nst_anl      = .true.
   psautco      = 0.0008,0.0005
   prautco      = 0.00015,0.00015
@@ -118,6 +119,7 @@
   rrtmgp_nGptsLW = 128
   rrtmgp_nBandsLW = 16
   rrtmgp_nBandsSW = 14
+  use_med_flux = .false.
   frac_grid    = .true.
   cplchm       = .false.
   cplflx       = .false.
@@ -135,7 +137,8 @@
   nthresh      = 18
   ca_trigger   = .true.
   nspinup      = 1
-  iseed_ca     = 1448371824
+  iseed_ca     = 561750924
+
 /
 
 &cires_ugwp_nml
